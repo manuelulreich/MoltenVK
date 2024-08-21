@@ -1278,16 +1278,14 @@ void MVKGPUAddressableBuffersCommandEncoderState::useGPUAddressableBuffersInStag
 
 void MVKGPUAddressableBuffersCommandEncoderState::encodeImpl(uint32_t stage) {
 	auto* mvkDev = getDevice();
-	for (uint32_t i = kMVKShaderStageVertex; i < kMVKShaderStageCount; i++) {
-		MVKShaderStage shaderStage = MVKShaderStage(i);
-		if (_usageStages[shaderStage]) {
-			MVKResourcesCommandEncoderState* rezEncState = (shaderStage == kMVKShaderStageCompute
-															? (MVKResourcesCommandEncoderState*)&_cmdEncoder->_computeResourcesState
-															: (MVKResourcesCommandEncoderState*)&_cmdEncoder->_graphicsResourcesState);
-			mvkDev->encodeGPUAddressableBuffers(rezEncState, shaderStage);
-		}
+	MVKShaderStage shaderStage = MVKShaderStage(stage);
+	if (_usageStages[shaderStage]) { //if potentially used in current stage, encode
+		MVKResourcesCommandEncoderState* rezEncState = (shaderStage == kMVKShaderStageCompute
+														? (MVKResourcesCommandEncoderState*)&_cmdEncoder->_computeResourcesState
+														: (MVKResourcesCommandEncoderState*)&_cmdEncoder->_graphicsResourcesState);
+		mvkDev->encodeGPUAddressableBuffers(rezEncState, shaderStage);
+		_usageStages[shaderStage] = false; //clear usage
 	}
-	mvkClear(_usageStages, kMVKShaderStageCount);
 }
 
 
